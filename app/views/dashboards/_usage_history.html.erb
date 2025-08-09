@@ -1,0 +1,26 @@
+<div id="usage-history" class="bg-white shadow-lg rounded-xl p-6">
+  <h2 class="text-xl font-bold text-gray-900 mb-4">Usage History</h2>
+  <table class="w-full table-auto">
+    <thead>
+      <tr class="text-left text-gray-600">
+        <th class="p-3">Provider</th>
+        <th class="p-3">Requests</th>
+        <th class="p-3">Timestamp</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @records.each do |record| %>
+        <tr class="border-t">
+          <td class="p-3"><%= record.provider.name %></td>
+          <td class="p-3"><%= record.request_count %></td>
+          <td class="p-3"><%= record.timestamp.strftime("%Y-%m-%d %H:%M") %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+  <% if @pagy.pages > 1 %>
+    <div class="mt-4">
+      <%= pagy_nav(@pagy).html_safe %>
+    </div>
+  <% end %>
+</div>

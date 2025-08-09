@@ -1,0 +1,7 @@
+<div class="bg-white shadow-lg rounded-xl p-6 mb-4" data-controller="usage-chart">
+  <h2 class="text-xl font-bold mb-2 text-gray-900"><%= @provider.name %></h2>
+  <p class="text-gray-600">Plan: <%= @plan&.name || "N/A" %></p>
+  <p class="text-gray-600">Requests: <%= @usage&.request_count || 0 %></p>
+  <p class="text-gray-600">Rate Limit: <%= @rate_limit&.remaining || 0 %> / <%= @rate_limit&.limit || 0 %> (Resets <%= @rate_limit ? time_ago_in_words(@rate_limit.reset_at) : "N/A" %>)</p>
+  <canvas data-usage-chart-target="canvas" class="mt-4"></canvas>
+</div>

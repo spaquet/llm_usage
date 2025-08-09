@@ -1,0 +1,42 @@
+<%= turbo_frame_tag "provider_form" do %>
+  <div class="bg-white shadow-lg rounded-xl p-6 mb-6">
+    <h2 class="text-xl font-bold text-gray-900 mb-4"><%= provider.persisted? ? "Edit Provider" : "Add Provider" %></h2>
+    <%= form_with model: provider, class: "space-y-4" do |form| %>
+      <% if provider.errors.any? %>
+        <div class="bg-red-100 text-red-700 p-4 rounded-lg">
+          <ul>
+            <% provider.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+      <div>
+        <%= form.label :provider_type, "Provider Type", class: "block text-gray-600 mb-1" %>
+        <%= form.select :provider_type, options_for_select(predefined_providers.keys, form.object.provider_type || params[:provider]&.dig(:provider_type)), { include_blank: "Select a provider" }, class: "w-full p-2 border rounded-lg", data: { controller: "provider-form", action: "change->provider-form#toggleKeyField" } %>
+      </div>
+      <div>
+        <%= form.label :name, class: "block text-gray-600 mb-1" %>
+        <%= form.text_field :name, class: "w-full p-2 border rounded-lg", placeholder: "e.g., My xAI Provider" %>
+      </div>
+      <div>
+        <%= form.label :description, class: "block text-gray-600 mb-1" %>
+        <%= form.text_area :description, class: "w-full p-2 border rounded-lg", rows: 4, placeholder: "Optional description" %>
+      </div>
+      <div data-provider-form-target="keyField">
+        <%= form.label :api_key, "API Key", class: "block text-gray-600 mb-1 hidden", data: { provider_form_target: "label" } %>
+        <%= form.text_field :api_key, class: "w-full p-2 border rounded-lg hidden", placeholder: "Enter API Key", data: { provider_form_target: "input" } %>
+      </div>
+      <div data-provider-form-target="secretField" class="hidden">
+        <%= form.label :api_secret, "API Secret", class: "block text-gray-600 mb-1", data: { provider_form_target: "label" } %>
+        <%= form.text_field :api_secret, class: "w-full p-2 border rounded-lg", placeholder: "Enter API Secret", data: { provider_form_target: "input" } %>
+      </div>
+      <div class="flex space-x-2">
+        <%= form.submit provider.persisted? ? "Update Provider" : "Add Provider", class: "py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition cursor-pointer" %>
+        <% if provider.persisted? %>
+          <%= link_to "Cancel", providers_path, class: "py-2 px-4 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition" %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

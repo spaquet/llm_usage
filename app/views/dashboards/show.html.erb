@@ -1,0 +1,13 @@
+<div id="dashboard" class="container mx-auto p-6">
+  <h1 class="text-3xl font-bold text-gray-900 mb-6">API Usage Dashboard</h1>
+  <div class="mb-4">
+    <%= link_to "Manage Providers", providers_path, class: "inline-block py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition" %>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <%= render partial: "usage_card", collection: @providers, as: :provider %>
+  </div>
+  <div class="mt-8">
+    <%= render "usage_history" %>
+  </div>
+  <%= link_to "Refresh Data", refresh_dashboards_path, class: "inline-block mt-4 py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition", data: { turbo: false } %>
+</div>

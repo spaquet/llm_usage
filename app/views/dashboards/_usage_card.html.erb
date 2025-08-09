@@ -1,0 +1,11 @@
+<%= render UsageCardComponent.new(
+  provider: provider,
+  plan: provider.plans.last,
+  usage: provider.usage_records.last,
+  rate_limit: provider.rate_limits.last
+) do %>
+  <div data-labels="<%= provider.usage_records.last(7).map { |r| r.timestamp.strftime("%Y-%m-%d") }.to_json %>"
+       data-data="<%= provider.usage_records.last(7).map(&:request_count).to_json %>">
+    <%= content %>
+  </div>
+<% end %>

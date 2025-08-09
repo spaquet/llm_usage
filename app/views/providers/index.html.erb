@@ -1,0 +1,30 @@
+<div class="container mx-auto p-6">
+  <h1 class="text-3xl font-bold text-gray-900 mb-6">Manage Providers</h1>
+  <div id="notice" class="mb-4">
+    <%= render "shared/notice", message: flash[:notice] %>
+  </div>
+  <div id="provider_form" class="mb-8">
+    <%= render "form", provider: @provider, predefined_providers: @predefined_providers %>
+  </div>
+  <div id="providers" class="bg-white shadow-lg rounded-xl p-6">
+    <h2 class="text-xl font-bold text-gray-900 mb-4">Providers</h2>
+    <% if @providers.any? %>
+      <table class="w-full table-auto">
+        <thead>
+          <tr class="text-left text-gray-600">
+            <th class="p-3">Name</th>
+            <th class="p-3">API URL</th>
+            <th class="p-3">Status</th>
+            <th class="p-3">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <%= render partial: "provider", collection: @providers %>
+        </tbody>
+      </table>
+    <% else %>
+      <p class="text-gray-600">No providers added yet.</p>
+    <% end %>
+  </div>
+  <%= link_to "Back to Dashboard", root_path, class: "inline-block mt-4 py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition" %>
+</div>

@@ -1,0 +1,9 @@
+<tr id="provider_<%= provider.id %>" class="border-t">
+  <td class="p-3"><%= provider.name %></td>
+  <td class="p-3"><%= provider.api_url %></td>
+  <td class="p-3"><%= provider.status.humanize %></td>
+  <td class="p-3 flex space-x-2">
+    <%= link_to "Edit", edit_provider_path(provider), class: "text-blue-600 hover:underline", data: { turbo_frame: "provider_form" } %>
+    <%= link_to "Delete", provider_path(provider), class: "text-red-600 hover:underline", data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete #{provider.name}?" } %>
+  </td>
+</tr>
