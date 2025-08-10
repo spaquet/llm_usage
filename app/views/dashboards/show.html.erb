@@ -9,6 +9,8 @@
       <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
       <p class="mt-2 text-gray-600">Monitor your AI API usage across all providers</p>
     </div>
+    <!-- Sync Status Section -->
+    <%= render 'shared/sync_status' %>
     <!-- Quick Stats Overview -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <!-- Total Usage Today -->
@@ -55,7 +57,6 @@
       <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm font-medium text-gray-600">Active Providers</p>
             <p class="text-2xl font-bold text-gray-900"><%= @providers.where(status: :active).count %></p>
             <p class="text-sm text-gray-500">
               <%= @providers.where(status: :active).pluck(:name).join(', ') %>
@@ -73,7 +74,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium text-gray-600">Rate Limit Status</p>
-            <p class="text-2xl font-bold text-<%= rate_limit_status_color %>"><%= overall_rate_limit_status %></p>
+            <p class="text-2xl font-bold text-<%= rate_limit_status_color %>-600"><%= overall_rate_limit_status %></p>
             <p class="text-sm text-gray-500">All limits monitored</p>
           </div>
           <div class="w-12 h-12 bg-<%= rate_limit_status_color %>-100 rounded-lg flex items-center justify-center">
@@ -92,7 +93,18 @@
     </div>
     <!-- Provider Cards with Enhanced Information -->
     <div class="mb-8">
-      <h2 class="text-xl font-semibold text-gray-900 mb-6">Provider Usage Details</h2>
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-semibold text-gray-900">Provider Usage Details</h2>
+        <div class="flex items-center space-x-3">
+          <span class="text-sm text-gray-500">
+            Auto-refresh every 15 minutes
+          </span>
+          <div class="flex items-center space-x-1">
+            <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            <span class="text-xs text-gray-500">Live</span>
+          </div>
+        </div>
+      </div>
       <% if @providers.any? %>
         <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           <% @providers.each do |provider| %>
@@ -121,7 +133,12 @@
     <!-- Usage History Table -->
     <div class="bg-white rounded-xl shadow-sm overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-200">
-        <h2 class="text-lg font-semibold text-gray-900">Recent Usage History</h2>
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-semibold text-gray-900">Recent Usage History</h2>
+          <div class="text-sm text-gray-500">
+            Showing real-time data from API providers
+          </div>
+        </div>
       </div>
       <% if @records.any? %>
         <div class="overflow-x-auto">
@@ -132,6 +149,7 @@
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requests</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sync Status</th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -146,20 +164,36 @@
                       </div>
                       <div class="ml-3">
                         <div class="text-sm font-medium text-gray-900"><%= record.provider.name %></div>
-                        <div class="text-sm text-gray-500"><%= record.provider.api_url %></div>
+                        <div class="text-sm text-gray-500"><%= record.provider.provider_type %></div>
                       </div>
                     </div>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <%= format_number(record.request_count) %>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900"><%= format_number(record.request_count) %></div>
+                    <div class="text-sm text-gray-500">requests</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <%= record.timestamp.strftime("%B %d, %Y at %I:%M %p") %>
+                    <div class="text-xs text-gray-400">
+                      <%= time_ago_in_words(record.timestamp) %> ago
+                    </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <span class="<%= status_badge_class(record.provider.status) %>">
                       <%= record.provider.status.humanize %>
                     </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <% if record.provider.last_sync_at %>
+                      <div class="text-sm text-gray-900">
+                        <%= time_ago_in_words(record.provider.last_sync_at) %> ago
+                      </div>
+                      <div class="text-xs text-gray-500">
+                        <%= record.provider.sync_failures_count %> failures
+                      </div>
+                    <% else %>
+                      <span class="text-sm text-gray-500">Never synced</span>
+                    <% end %>
                   </td>
                 </tr>
               <% end %>
@@ -179,7 +213,16 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
             </svg>
           </div>
-          <p class="text-gray-500">No usage data available yet.</p>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">No usage data available</h3>
+          <p class="text-gray-500 mb-4">Usage data will appear here once your providers start syncing.</p>
+          <%= link_to refresh_dashboards_path, 
+              class: "inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors",
+              data: { turbo: false } do %>
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            Sync Now
+          <% end %>
         </div>
       <% end %>
     </div>

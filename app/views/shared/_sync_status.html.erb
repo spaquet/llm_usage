@@ -1,0 +1,62 @@
+<!-- app/views/shared/_sync_status.html.erb -->
+<div class="bg-white rounded-xl shadow-sm p-4 mb-6">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-lg font-semibold text-gray-900">Sync Status</h3>
+    <div class="flex items-center space-x-2">
+      <%= link_to refresh_dashboards_path, 
+          class: "text-sm text-blue-600 hover:text-blue-800 transition-colors",
+          data: { turbo: false } do %>
+        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
+        Refresh Now
+      <% end %>
+      <%= link_to refresh_dashboards_path(force: true), 
+          class: "text-sm text-orange-600 hover:text-orange-800 transition-colors",
+          data: { 
+            turbo: false,
+            confirm: "This will force refresh all providers. Continue?" 
+          } do %>
+        Force Refresh All
+      <% end %>
+    </div>
+  </div>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <!-- Total Providers -->
+    <div class="text-center">
+      <div class="text-2xl font-bold text-gray-900"><%= @refresh_status[:total_providers] %></div>
+      <div class="text-sm text-gray-500">Total Providers</div>
+    </div>
+    <!-- Recently Synced -->
+    <div class="text-center">
+      <div class="text-2xl font-bold text-green-600"><%= @refresh_status[:synced_recently] %></div>
+      <div class="text-sm text-gray-500">Recently Synced</div>
+    </div>
+    <!-- Need Sync -->
+    <div class="text-center">
+      <div class="text-2xl font-bold text-yellow-600"><%= @refresh_status[:needs_sync] %></div>
+      <div class="text-sm text-gray-500">Need Sync</div>
+    </div>
+    <!-- Healthy -->
+    <div class="text-center">
+      <div class="text-2xl font-bold text-blue-600"><%= @refresh_status[:healthy] %></div>
+      <div class="text-sm text-gray-500">Healthy</div>
+    </div>
+  </div>
+  <% if @refresh_status[:last_global_sync] %>
+    <div class="mt-4 pt-4 border-t border-gray-200">
+      <div class="flex items-center justify-between text-sm text-gray-600">
+        <span>Last global sync: <%= time_ago_in_words(@refresh_status[:last_global_sync]) %> ago</span>
+        <% if @refresh_status[:sync_in_progress] %>
+          <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+            <svg class="animate-spin -ml-1 mr-2 h-3 w-3 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Sync in progress
+          </span>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

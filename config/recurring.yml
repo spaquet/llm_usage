@@ -1,15 +1,37 @@
-# examples:
-#   periodic_cleanup:
-#     class: CleanSoftDeletedRecordsJob
-#     queue: background
-#     args: [ 1000, { batch_size: 500 } ]
-#     schedule: every hour
-#   periodic_cleanup_with_command:
-#     command: "SoftDeletedRecord.due.delete_all"
-#     priority: 2
-#     schedule: at 5am every day
+# config/recurring.yml
+# Recurring job configuration for Solid Queue
+
+development:
+  sync_api_usage:
+    class: SyncApiUsageJob
+    schedule: every 15 minutes
+    queue: default
+    priority: 1
+
+test:
+  # No recurring jobs in test
 
 production:
+  # Clear finished jobs
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
+
+  # Sync API usage every 15 minutes
+  sync_api_usage:
+    class: SyncApiUsageJob
+    schedule: every 15 minutes
+    queue: default
+    priority: 1
+
+  # Daily health check for all providers
+  daily_provider_health_check:
+    class: ProviderHealthCheckJob
+    schedule: every day at 6am
+    queue: default
+    priority: 2
+
+  # Weekly cleanup of old usage records (keep only last 90 days)
+  weekly_usage_cleanup:
+    command: "UsageRecord.where('created_at < ?', 90.days.ago).delete_all"
+    schedule: every sunday at 2am

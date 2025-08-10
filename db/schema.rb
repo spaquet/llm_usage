@@ -32,6 +32,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_09_210514) do
     t.integer "status", default: 0, null: false
     t.string "description"
     t.string "provider_type"
+    t.jsonb "metadata", default: {}
+    t.datetime "last_sync_at"
+    t.integer "sync_failures_count", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end

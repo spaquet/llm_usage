@@ -9,6 +9,9 @@ class CreateProviders < ActiveRecord::Migration[8.0]
       t.integer :status, null: false, default: 0
       t.string :description
       t.string :provider_type
+      t.jsonb :metadata, default: {}
+      t.datetime :last_sync_at
+      t.integer :sync_failures_count, default: 0
 
       t.timestamps
     end
@@ -16,5 +19,7 @@ class CreateProviders < ActiveRecord::Migration[8.0]
     # add_index :providers, :api_key, unique: true, name: "index_providers_on_api_key"
     # add_index :providers, :status, name: "index_providers_on_status"
     # add_index :providers, :provider_type, name: "index_providers_on_provider_type"  # Add this line
+    # add_index :providers, :metadata, using: :gin
+    # add_index :providers, :last_sync_at
   end
 end

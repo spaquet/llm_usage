@@ -7,43 +7,14 @@ class EnhancedUsageCardComponent < ViewComponent::Base
     @plan = provider.plans.last
     @usage = provider.usage_records.last
     @rate_limit = provider.rate_limits.last
-    @monthly_usage = calculate_monthly_usage
-    @monthly_limit = plan_monthly_limit
+    # Use the new provider methods instead of calculating here
+    @monthly_usage = provider.monthly_usage_cost
+    @monthly_limit = provider.monthly_limit_cost
   end
 
   private
 
   attr_reader :provider, :plan, :usage, :rate_limit, :monthly_usage, :monthly_limit
-
-  def calculate_monthly_usage
-    # This should be calculated based on actual usage data
-    # For now, returning mock data
-    case provider.name.downcase
-    when /claude|anthropic/
-      120.0
-    when /openai|gpt/
-      180.0
-    when /xai|grok/
-      45.0
-    else
-      0.0
-    end
-  end
-
-  def plan_monthly_limit
-    # This should come from the plan details
-    # For now, returning mock data
-    case provider.name.downcase
-    when /claude|anthropic/
-      200.0
-    when /openai|gpt/
-      200.0
-    when /xai|grok/
-      100.0
-    else
-      100.0
-    end
-  end
 
   def usage_percentage
     return 0 if monthly_limit.zero?
@@ -78,7 +49,6 @@ class EnhancedUsageCardComponent < ViewComponent::Base
     end
   end
 
-  # Move helper methods into component to avoid helpers. calls
   def provider_icon_class(provider_name)
     case provider_name.downcase
     when /claude|anthropic/
@@ -141,66 +111,45 @@ class EnhancedUsageCardComponent < ViewComponent::Base
   end
 
   def input_tokens
-    # Mock data - should come from usage records
-    case provider.name.downcase
-    when /claude|anthropic/
-      850_000
-    when /openai|gpt/
-      1_200_000
-    when /xai|grok/
-      450_000
-    else
-      0
-    end
+    # Use the provider's metadata directly
+    provider.input_tokens
   end
 
   def output_tokens
-    # Mock data - should come from usage records
-    case provider.name.downcase
-    when /claude|anthropic/
-      280_000
-    when /openai|gpt/
-      320_000
-    when /xai|grok/
-      150_000
-    else
-      0
-    end
+    # Use the provider's metadata directly
+    provider.output_tokens
   end
 
   def images_generated
-    # Mock data - should come from usage records
-    case provider.name.downcase
-    when /openai|gpt/
-      24
-    when /xai|grok/
-      12
-    else
-      0
-    end
+    # Use the provider's metadata directly
+    provider.images_generated
   end
 
   def requests_today
-    # Mock data - should come from usage records
-    usage&.request_count || rand(50..200)
+    # Use the provider's method for today's requests
+    provider.today_requests
   end
 
   def rate_limit_requests
-    rate_limit&.remaining || rand(40..50)
+    rate_limit&.remaining || 0
   end
 
   def rate_limit_requests_max
-    rate_limit&.limit || 50
+    rate_limit&.limit || 1000
   end
 
   def rate_limit_tokens
-    # Mock data
-    case provider.name.downcase
-    when /claude|anthropic/
+    # Get from plan details or provider metadata, with fallbacks
+    return plan.details["remaining_tokens"]&.to_i if plan&.details&.dig("remaining_tokens")
+    return provider.metadata["remaining_tokens"]&.to_i if provider.metadata["remaining_tokens"]
+
+    # Default based on provider type
+    case provider.provider_type&.downcase
+    when "anthropic"
       38_000
-    when /openai|gpt/
+    when "openai"
       149_000
-    when /xai|grok/
+    when "xai"
       28_000
     else
       10_000
@@ -208,13 +157,17 @@ class EnhancedUsageCardComponent < ViewComponent::Base
   end
 
   def rate_limit_tokens_max
-    # Mock data
-    case provider.name.downcase
-    when /claude|anthropic/
+    # Get from plan details or provider metadata, with fallbacks
+    return plan.details["tokens_per_minute"]&.to_i if plan&.details&.dig("tokens_per_minute")
+    return provider.metadata["tokens_per_minute"]&.to_i if provider.metadata["tokens_per_minute"]
+
+    # Default based on provider type
+    case provider.provider_type&.downcase
+    when "anthropic"
       40_000
-    when /openai|gpt/
+    when "openai"
       150_000
-    when /xai|grok/
+    when "xai"
       30_000
     else
       10_000
@@ -222,6 +175,8 @@ class EnhancedUsageCardComponent < ViewComponent::Base
   end
 
   def rate_limit_status(current, max)
+    return "text-gray-600" if max.zero?
+
     percentage = (current.to_f / max.to_f) * 100
     case percentage
     when 0..70
@@ -248,7 +203,7 @@ class EnhancedUsageCardComponent < ViewComponent::Base
   end
 
   def days_until_reset
-    # Mock data - should calculate based on plan reset date
-    rand(8..15)
+    # Calculate days until month end (when most billing cycles reset)
+    (Date.current.end_of_month - Date.current).to_i
   end
 end
