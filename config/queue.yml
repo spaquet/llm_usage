@@ -1,3 +1,4 @@
+# config/queue.yml
 default: &default
   dispatchers:
     - polling_interval: 1
@@ -10,9 +11,14 @@ default: &default
 
 development:
   <<: *default
+  # Use main database connection for development
+  # No separate database configuration needed
 
 test:
   <<: *default
+  # Use main database connection for test
+  # No separate database configuration needed
 
 production:
   <<: *default
+  # Production uses separate databases as configured in database.yml

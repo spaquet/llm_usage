@@ -28,7 +28,7 @@ class DashboardRefreshService
 
     begin
       # Check if provider was synced recently to avoid rate limiting
-      if provider.last_sync_at && provider.last_sync_at > 5.minutes.ago
+      if provider.respond_to?(:last_sync_at) && provider.last_sync_at && provider.last_sync_at > 5.minutes.ago
         return skip_result(provider, "Recently synced")
       end
 
@@ -47,9 +47,9 @@ class DashboardRefreshService
 
     {
       total_providers: active_providers.count,
-      synced_recently: active_providers.synced_recently.count,
-      needs_sync: active_providers.needs_sync.count,
-      healthy: active_providers.healthy.count,
+      synced_recently: synced_recently_count(active_providers),
+      needs_sync: needs_sync_count(active_providers),
+      healthy: healthy_count(active_providers),
       last_global_sync: last_global_sync_time,
       sync_in_progress: sync_jobs_running?
     }
@@ -69,19 +69,28 @@ class DashboardRefreshService
 
   private
 
-  def refresh_provider_immediately(provider)
-    client = create_api_client(provider)
-    return false unless client&.test_connection
-
-    usage_data = client.fetch_usage
-    return false unless usage_data.present?
-
-    # Update provider data immediately
-    ActiveRecord::Base.transaction do
-      update_provider_data(provider, usage_data)
+  def synced_recently_count(providers)
+    if Provider.column_names.include?("last_sync_at")
+      providers.where("last_sync_at > ?", 1.hour.ago).count
+    else
+      0
     end
+  end
 
-    true
+  def needs_sync_count(providers)
+    if Provider.column_names.include?("last_sync_at")
+      providers.where("last_sync_at IS NULL OR last_sync_at < ?", 15.minutes.ago).count
+    else
+      providers.count # All providers need sync if no tracking
+    end
+  end
+
+  def healthy_count(providers)
+    if Provider.column_names.include?("sync_failures_count")
+      providers.where(sync_failures_count: 0..2).count
+    else
+      providers.count # Assume all healthy if no tracking
+    end
   end
 
   def create_api_client(provider)
@@ -95,30 +104,6 @@ class DashboardRefreshService
     else
       nil
     end
-  end
-
-  def update_provider_data(provider, usage_data)
-    # Update plan
-    plan = provider.plans.find_or_initialize_by(name: usage_data["plan_name"])
-    plan.update!(details: usage_data["plan_details"])
-
-    # Update usage record
-    provider.usage_records.create!(
-      user_id: usage_data["user_id"],
-      request_count: usage_data["request_count"],
-      timestamp: Time.current
-    )
-
-    # Update rate limits
-    rate_limit = provider.rate_limits.first_or_initialize
-    rate_limit.update!(
-      limit: usage_data["rate_limit"],
-      remaining: usage_data["rate_limit_remaining"],
-      reset_at: parse_reset_time(usage_data["rate_limit_reset"])
-    )
-
-    # Update provider metadata
-    provider.update_sync_metadata(usage_data)
   end
 
   def schedule_additional_syncs(results)
@@ -135,7 +120,7 @@ class DashboardRefreshService
       status: :success,
       provider: provider,
       message: "Successfully refreshed #{provider.name}",
-      synced_at: provider.last_sync_at
+      synced_at: provider.respond_to?(:last_sync_at) ? provider.last_sync_at : Time.current
     }
   end
 
@@ -158,27 +143,36 @@ class DashboardRefreshService
   end
 
   def last_global_sync_time
-    Provider.active.maximum(:last_sync_at)
+    if Provider.column_names.include?("last_sync_at")
+      Provider.active.maximum(:last_sync_at)
+    else
+      nil
+    end
   end
 
   def sync_jobs_running?
-    # Check if there are any sync jobs currently running
-    SolidQueue::Job.where(class_name: "SyncApiUsageJob")
-                   .where(finished_at: nil)
-                   .exists?
-  end
-
-  def parse_reset_time(reset_time_string)
-    return 1.hour.from_now unless reset_time_string.present?
+    # Check if we can access job information
+    return false unless solid_queue_tables_exist?
 
     begin
-      if reset_time_string.is_a?(String)
-        Time.parse(reset_time_string)
-      else
-        Time.at(reset_time_string.to_i)
-      end
-    rescue
-      1.hour.from_now
+      SolidQueue::Job.where(class_name: "SyncApiUsageJob")
+                     .where(finished_at: nil)
+                     .exists?
+    rescue => e
+      Rails.logger.debug("Could not check job status: #{e.message}")
+      false
+    end
+  end
+
+  def solid_queue_tables_exist?
+    return false unless defined?(SolidQueue)
+
+    begin
+      # Check if the table exists in the current database connection
+      ActiveRecord::Base.connection.table_exists?("solid_queue_jobs")
+    rescue => e
+      Rails.logger.debug("SolidQueue tables not available: #{e.message}")
+      false
     end
   end
 end
