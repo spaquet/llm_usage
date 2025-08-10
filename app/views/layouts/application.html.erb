@@ -1,28 +1,61 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "Lll Usage Dashboard" %></title>
+    <title><%= content_for(:title) || "LLM Usage Dashboard" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
-
     <%= yield :head %>
-
     <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
     <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
-
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
-
     <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
   </head>
-
-  <body>
+  <body class="bg-gray-50">
+    <div id="notice" class="hidden fixed top-0 left-0 right-0 z-50">
+      <!-- Flash messages will be inserted here -->
+    </div>
     <%= yield %>
+    <!-- Loading overlay for Turbo navigation -->
+    <div id="loading-overlay" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center">
+      <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
+        <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span class="text-gray-700">Loading...</span>
+      </div>
+    </div>
+    <script>
+      // Show loading overlay for longer requests
+      document.addEventListener('turbo:click', function() {
+        setTimeout(function() {
+          document.getElementById('loading-overlay').classList.remove('hidden');
+        }, 300);
+      });
+
+      document.addEventListener('turbo:load', function() {
+        document.getElementById('loading-overlay').classList.add('hidden');
+      });
+
+      // Auto-hide flash messages after 5 seconds
+      document.addEventListener('turbo:load', function() {
+        const notices = document.querySelectorAll('.flash-message');
+        notices.forEach(function(notice) {
+          setTimeout(function() {
+            notice.style.opacity = '0';
+            setTimeout(function() {
+              notice.remove();
+            }, 300);
+          }, 5000);
+        });
+      });
+    </script>
   </body>
 </html>

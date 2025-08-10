@@ -1,0 +1,94 @@
+<!-- app/views/shared/_navigation.html.erb -->
+<nav class="bg-white shadow-lg border-b border-gray-200">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-16">
+      <!-- Logo and Brand -->
+      <div class="flex items-center space-x-4">
+        <div class="flex-shrink-0">
+          <div class="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+          </div>
+        </div>
+        <div>
+          <%= link_to root_path, class: "flex flex-col" do %>
+            <h1 class="text-xl font-bold text-gray-900">LLM Usage Dashboard</h1>
+            <p class="text-xs text-gray-500">Monitor your AI API usage</p>
+          <% end %>
+        </div>
+      </div>
+      <!-- Navigation Links -->
+      <div class="hidden md:block">
+        <div class="ml-10 flex items-baseline space-x-4">
+          <%= link_to root_path, class: nav_link_class(request.path == root_path) do %>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z"></path>
+            </svg>
+            <span>Dashboard</span>
+          <% end %>
+          <%= link_to providers_path, class: nav_link_class(request.path.start_with?('/providers')) do %>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+            <span>Providers</span>
+          <% end %>
+          <%= link_to "#", class: nav_link_class(false) do %>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+            </svg>
+            <span>Reports</span>
+          <% end %>
+          <%= link_to "#", class: nav_link_class(false) do %>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            <span>Settings</span>
+          <% end %>
+        </div>
+      </div>
+      <!-- Action Buttons -->
+      <div class="flex items-center space-x-4">
+        <%= link_to refresh_dashboards_path, 
+            class: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 transition-colors shadow-sm",
+            data: { turbo: false } do %>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          <span>Refresh</span>
+        <% end %>
+      </div>
+      <!-- Mobile menu button -->
+      <div class="md:hidden">
+        <button data-controller="mobile-menu" data-action="click->mobile-menu#toggle" class="text-gray-600 hover:text-gray-900 focus:outline-none focus:text-gray-900 p-2 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- Mobile menu -->
+  <div data-mobile-menu-target="menu" class="md:hidden hidden">
+    <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-gray-50 border-t">
+      <%= link_to root_path, 
+          class: mobile_nav_link_class(request.path == root_path) do %>
+        Dashboard
+      <% end %>
+      <%= link_to providers_path, 
+          class: mobile_nav_link_class(request.path.start_with?('/providers')) do %>
+        Providers
+      <% end %>
+      <%= link_to "#", 
+          class: mobile_nav_link_class(false) do %>
+        Reports
+      <% end %>
+      <%= link_to "#", 
+          class: mobile_nav_link_class(false) do %>
+        Settings
+      <% end %>
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,103 @@
+<!-- app/components/enhanced_usage_card_component.html.erb -->
+<div class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+  <div class="p-6">
+    <!-- Header with Provider Info and Status -->
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center space-x-3">
+        <div class="<%= provider_icon_class(provider.name) %>">
+          <% case provider.name.downcase %>
+          <% when /claude|anthropic/ %>
+            <svg class="w-6 h-6 <%= provider_icon_color(provider.name) %>" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2L2 7v10c0 5.55 3.84 9.739 9 11 5.16-1.261 9-5.45 9-11V7l-10-5z"/>
+            </svg>
+          <% when /openai|gpt/ %>
+            <svg class="w-6 h-6 <%= provider_icon_color(provider.name) %>" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 19.7a6.0462 6.0462 0 0 0 4.0028-2.9003 5.98 5.98 0 0 0-.7454-7.0955 5.9847 5.9847 0 0 0 .0027-4.8832Z"/>
+            </svg>
+          <% when /xai|grok/ %>
+            <svg class="w-6 h-6 <%= provider_icon_color(provider.name) %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+          <% else %>
+            <svg class="w-6 h-6 <%= provider_icon_color(provider.name) %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+          <% end %>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900"><%= provider.name %></h3>
+          <p class="text-sm text-gray-500"><%= plan&.name || "No plan" %></p>
+        </div>
+      </div>
+      <span class="<%= helpers.status_badge_class(status_text) %>">
+        <%= status_text.humanize %>
+      </span>
+    </div>
+    <!-- Monthly Usage Progress Bar -->
+    <div class="mb-4">
+      <div class="flex justify-between items-center mb-2">
+        <span class="text-sm font-medium text-gray-700">Monthly Usage</span>
+        <span class="text-sm text-gray-500">
+          <%= helpers.format_currency(monthly_usage) %> / <%= helpers.format_currency(monthly_limit) %>
+        </span>
+      </div>
+      <div class="w-full bg-gray-200 rounded-full h-2">
+        <div class="<%= progress_bar_color %> h-2 rounded-full transition-all duration-300" 
+             style="width: <%= [usage_percentage, 100].min %>%"></div>
+      </div>
+      <div class="flex justify-between items-center mt-1">
+        <% if warning_message %>
+          <p class="text-xs text-red-600"><%= warning_message %></p>
+        <% else %>
+          <p class="text-xs text-gray-500">Resets in <%= days_until_reset %> days</p>
+        <% end %>
+        <p class="text-xs text-gray-500"><%= usage_percentage %>% used</p>
+      </div>
+    </div>
+    <!-- Token and Request Stats -->
+    <div class="space-y-3 mb-4">
+      <div class="flex justify-between items-center">
+        <span class="text-sm text-gray-600">Input Tokens</span>
+        <span class="text-sm font-medium text-gray-900"><%= helpers.format_number(input_tokens) %></span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-sm text-gray-600">Output Tokens</span>
+        <span class="text-sm font-medium text-gray-900"><%= helpers.format_number(output_tokens) %></span>
+      </div>
+      <% if images_generated > 0 %>
+        <div class="flex justify-between items-center">
+          <span class="text-sm text-gray-600">Images Generated</span>
+          <span class="text-sm font-medium text-gray-900"><%= images_generated %></span>
+        </div>
+      <% end %>
+      <div class="flex justify-between items-center">
+        <span class="text-sm text-gray-600">Requests Today</span>
+        <span class="text-sm font-medium text-gray-900"><%= requests_today %></span>
+      </div>
+    </div>
+    <!-- Rate Limits Section -->
+    <div class="bg-gray-50 rounded-lg p-3 mb-4">
+      <h4 class="text-sm font-medium text-gray-700 mb-2">Rate Limits</h4>
+      <div class="space-y-2">
+        <div class="flex justify-between items-center">
+          <span class="text-xs text-gray-600">Requests/min</span>
+          <span class="text-xs font-medium <%= rate_limit_status(rate_limit_requests, rate_limit_requests_max) %>">
+            <%= rate_limit_requests %>/<%= rate_limit_requests_max %>
+          </span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-xs text-gray-600">Tokens/min</span>
+          <span class="text-xs font-medium <%= rate_limit_status(rate_limit_tokens, rate_limit_tokens_max) %>">
+            <%= helpers.format_number(rate_limit_tokens) %>/<%= helpers.format_number(rate_limit_tokens_max) %>
+          </span>
+        </div>
+      </div>
+    </div>
+    <!-- Chart Container -->
+    <div class="h-32" data-controller="usage-chart" 
+         data-labels='<%= (1..7).map { |i| (Date.current - i.days).strftime("%m/%d") }.reverse.to_json %>'
+         data-data='<%= [12, 19, 15, 23, 28, 18, requests_today].to_json %>'>
+      <canvas data-usage-chart-target="canvas" class="w-full h-full"></canvas>
+    </div>
+  </div>
+</div>

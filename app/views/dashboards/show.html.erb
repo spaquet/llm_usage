@@ -1,13 +1,187 @@
-<div id="dashboard" class="container mx-auto p-6">
-  <h1 class="text-3xl font-bold text-gray-900 mb-6">API Usage Dashboard</h1>
-  <div class="mb-4">
-    <%= link_to "Manage Providers", providers_path, class: "inline-block py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition" %>
+<!-- app/views/dashboards/show.html.erb -->
+<div class="min-h-screen bg-gray-50">
+  <!-- Navigation -->
+  <%= render 'shared/navigation' %>
+  <!-- Main Dashboard Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+      <p class="mt-2 text-gray-600">Monitor your AI API usage across all providers</p>
+    </div>
+    <!-- Quick Stats Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <!-- Total Usage Today -->
+      <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Today's Usage</p>
+            <p class="text-2xl font-bold text-gray-900">
+              <%= format_currency(calculate_today_usage) %>
+            </p>
+            <p class="text-sm text-green-600">
+              <% change = calculate_usage_change %>
+              <%= change >= 0 ? '+' : '' %><%= change %>% from yesterday
+            </p>
+          </div>
+          <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <!-- Total Tokens -->
+      <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Total Tokens</p>
+            <p class="text-2xl font-bold text-gray-900">
+              <%= format_number(calculate_total_tokens) %>
+            </p>
+            <p class="text-sm text-blue-600">
+              Input: <%= format_number(calculate_input_tokens) %> | 
+              Output: <%= format_number(calculate_output_tokens) %>
+            </p>
+          </div>
+          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <!-- Active Providers -->
+      <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Active Providers</p>
+            <p class="text-2xl font-bold text-gray-900"><%= @providers.where(status: :active).count %></p>
+            <p class="text-sm text-gray-500">
+              <%= @providers.where(status: :active).pluck(:name).join(', ') %>
+            </p>
+          </div>
+          <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <!-- Rate Limit Status -->
+      <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Rate Limit Status</p>
+            <p class="text-2xl font-bold text-<%= rate_limit_status_color %>"><%= overall_rate_limit_status %></p>
+            <p class="text-sm text-gray-500">All limits monitored</p>
+          </div>
+          <div class="w-12 h-12 bg-<%= rate_limit_status_color %>-100 rounded-lg flex items-center justify-center">
+            <% if overall_rate_limit_status == 'Good' %>
+              <svg class="w-6 h-6 text-<%= rate_limit_status_color %>-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            <% else %>
+              <svg class="w-6 h-6 text-<%= rate_limit_status_color %>-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Provider Cards with Enhanced Information -->
+    <div class="mb-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-6">Provider Usage Details</h2>
+      <% if @providers.any? %>
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          <% @providers.each do |provider| %>
+            <%= render EnhancedUsageCardComponent.new(provider: provider) %>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="bg-white rounded-xl shadow-sm p-8 text-center">
+          <div class="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">No Providers Configured</h3>
+          <p class="text-gray-600 mb-4">Get started by adding your first AI provider to track usage.</p>
+          <%= link_to providers_path, 
+              class: "inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors" do %>
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Add Provider
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+    <!-- Usage History Table -->
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-900">Recent Usage History</h2>
+      </div>
+      <% if @records.any? %>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Provider</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requests</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <% @records.each do |record| %>
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="<%= provider_icon_class(record.provider.name) %> w-8 h-8">
+                        <svg class="w-4 h-4 <%= provider_icon_color(record.provider.name) %>" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2L2 7v10c0 5.55 3.84 9.739 9 11 5.16-1.261 9-5.45 9-11V7l-10-5z"/>
+                        </svg>
+                      </div>
+                      <div class="ml-3">
+                        <div class="text-sm font-medium text-gray-900"><%= record.provider.name %></div>
+                        <div class="text-sm text-gray-500"><%= record.provider.api_url %></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <%= format_number(record.request_count) %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <%= record.timestamp.strftime("%B %d, %Y at %I:%M %p") %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="<%= status_badge_class(record.provider.status) %>">
+                      <%= record.provider.status.humanize %>
+                    </span>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+        <!-- Pagination -->
+        <% if @pagy.pages > 1 %>
+          <div class="px-6 py-4 border-t border-gray-200">
+            <%= pagy_nav(@pagy).html_safe %>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="px-6 py-8 text-center">
+          <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+            </svg>
+          </div>
+          <p class="text-gray-500">No usage data available yet.</p>
+        </div>
+      <% end %>
+    </div>
   </div>
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    <%= render partial: "usage_card", collection: @providers, as: :provider %>
-  </div>
-  <div class="mt-8">
-    <%= render "usage_history" %>
-  </div>
-  <%= link_to "Refresh Data", refresh_dashboards_path, class: "inline-block mt-4 py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition", data: { turbo: false } %>
 </div>

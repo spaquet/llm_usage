@@ -1,124 +1,132 @@
+<!-- app/views/providers/_form.html.erb -->
 <%= turbo_frame_tag "provider_form" do %>
-  <div class="bg-white shadow-lg rounded-xl p-6 mb-6">
-    <h2 class="text-xl font-bold text-gray-900 mb-4"><%= provider.persisted? ? "Edit Provider" : "Add Provider" %></h2>
-    <!-- API Key Documentation Section -->
-    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-      <h3 class="text-lg font-semibold text-blue-900 mb-3">📋 How to Get Your API Key</h3>
-      <div class="grid md:grid-cols-3 gap-4 text-sm">
-        <div class="bg-white rounded-lg p-3 border">
-          <h4 class="font-semibold text-gray-900 mb-2">🤖 OpenAI</h4>
-          <ol class="text-gray-600 space-y-1">
-            <li>1. Go to <a href="https://platform.openai.com" target="_blank" class="text-blue-600 hover:underline">platform.openai.com</a></li>
-            <li>2. Sign in to your account</li>
-            <li>3. Click "API Keys" in sidebar</li>
-            <li>4. Click "Create new secret key"</li>
-            <li>5. Copy the key (starts with <code class="bg-gray-100 px-1 rounded">sk-</code>)</li>
-          </ol>
-        </div>
-        <div class="bg-white rounded-lg p-3 border">
-          <h4 class="font-semibold text-gray-900 mb-2">🧠 Anthropic (Claude)</h4>
-          <ol class="text-gray-600 space-y-1">
-            <li>1. Go to <a href="https://console.anthropic.com" target="_blank" class="text-blue-600 hover:underline">console.anthropic.com</a></li>
-            <li>2. Sign in to your account</li>
-            <li>3. Navigate to "API Keys"</li>
-            <li>4. Click "Create Key"</li>
-            <li>5. Copy the key (starts with <code class="bg-gray-100 px-1 rounded">sk-ant-</code>)</li>
-          </ol>
-        </div>
-        <div class="bg-white rounded-lg p-3 border">
-          <h4 class="font-semibold text-gray-900 mb-2">🚀 xAI (Grok)</h4>
-          <ol class="text-gray-600 space-y-1">
-            <li>1. Go to <a href="https://console.x.ai" target="_blank" class="text-blue-600 hover:underline">console.x.ai</a></li>
-            <li>2. Sign in to your account</li>
-            <li>3. Navigate to "API Keys"</li>
-            <li>4. Generate new API key</li>
-            <li>5. Copy the generated key</li>
-          </ol>
-        </div>
-      </div>
-      <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-        <p class="text-yellow-800 text-sm">
-          🔒 <strong>Security Note:</strong> Your API keys are encrypted and stored securely. Never share your API keys publicly.
+  <div class="bg-white rounded-xl shadow-sm p-6">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-xl font-semibold text-gray-900">
+          <%= provider.persisted? ? "Edit Provider" : "Add New Provider" %>
+        </h2>
+        <p class="text-sm text-gray-600 mt-1">
+          <%= provider.persisted? ? "Update your provider configuration" : "Configure a new AI provider to track usage" %>
         </p>
       </div>
+      <% if provider.persisted? %>
+        <%= link_to providers_path, 
+            class: "text-gray-400 hover:text-gray-600 transition-colors" do %>
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        <% end %>
+      <% end %>
     </div>
-    <%= form_with model: provider, class: "space-y-4", data: { controller: "provider-form" } do |form| %>
+    <%= form_with model: provider, class: "space-y-6", data: { controller: "provider-form" } do |form| %>
       <% if provider.errors.any? %>
-        <div class="bg-red-100 text-red-700 p-4 rounded-lg">
-          <ul>
-            <% provider.errors.full_messages.each do |message| %>
-              <li><%= message %></li>
-            <% end %>
-          </ul>
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-red-800">Please fix the following errors:</h3>
+              <div class="mt-2 text-sm text-red-700">
+                <ul class="list-disc list-inside space-y-1">
+                  <% provider.errors.full_messages.each do |message| %>
+                    <li><%= message %></li>
+                  <% end %>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
       <% end %>
-      <div>
-        <%= form.label :provider_type, "Provider Type", class: "block text-gray-700 font-medium mb-2" %>
-        <%= form.select :provider_type, 
-            options_for_select(predefined_providers.keys.map { |k| [k, k] }, form.object.provider_type || params[:provider]&.dig(:provider_type)), 
-            { include_blank: "Select a provider" }, 
-            { 
-              class: "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500", 
-              data: { action: "change->provider-form#toggleKeyField" }
-            } %>
-      </div>
-      <div>
-        <%= form.label :name, "Provider Name", class: "block text-gray-700 font-medium mb-2" %>
-        <%= form.text_field :name, 
-            class: "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500", 
-            placeholder: "e.g., My OpenAI Production Account" %>
-      </div>
-      <div>
-        <%= form.label :description, "Description (Optional)", class: "block text-gray-700 font-medium mb-2" %>
-        <%= form.text_area :description, 
-            class: "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500", 
-            rows: 3, 
-            placeholder: "Optional description for this provider" %>
-      </div>
-      <div data-provider-form-target="keyField" class="hidden">
-        <%= form.label :api_key, "API Key", class: "block text-gray-700 font-medium mb-2", data: { provider_form_target: "keyLabel" } %>
-        <div class="relative">
-          <%= form.password_field :api_key, 
-              class: "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-12", 
-              placeholder: "Paste your API key here",
-              data: { provider_form_target: "keyInput" } %>
-          <button type="button" 
-                  class="absolute inset-y-0 right-0 px-3 py-2 text-gray-500 hover:text-gray-700"
-                  onclick="togglePasswordVisibility(this)"
-                  title="Show/Hide API Key">
-            👁️
-          </button>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Provider Type Selection -->
+        <div class="md:col-span-2">
+          <%= form.label :provider_type, "Provider Type", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= form.select :provider_type, 
+              options_for_select(predefined_providers.map { |key, value| [key, key] }, provider.provider_type), 
+              { include_blank: "Select a provider type" }, 
+              { 
+                class: "w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors",
+                data: { action: "change->provider-form#toggleKeyField" }
+              } %>
         </div>
-        <p class="text-sm text-gray-500 mt-1">
-          Your API key will be encrypted and stored securely.
-        </p>
-      </div>
-      <div data-provider-form-target="secretField" class="hidden">
-        <%= form.label :api_secret, "API Secret", class: "block text-gray-700 font-medium mb-2" %>
-        <%= form.password_field :api_secret, 
-            class: "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500", 
-            placeholder: "Enter API Secret" %>
-      </div>
-      <div class="flex space-x-3 pt-4">
-        <%= form.submit provider.persisted? ? "Update Provider" : "Add Provider", 
-            class: "px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition cursor-pointer" %>
+        <!-- Provider Name -->
+        <div>
+          <%= form.label :name, "Provider Name", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= form.text_field :name, 
+              class: "w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors", 
+              placeholder: "e.g., My Claude API" %>
+          <p class="mt-1 text-xs text-gray-500">A friendly name to identify this provider</p>
+        </div>
+        <!-- Status (for existing providers) -->
         <% if provider.persisted? %>
-          <%= link_to "Cancel", providers_path, 
-              class: "px-6 py-3 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition" %>
+          <div>
+            <%= form.label :status, "Status", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= form.select :status, 
+                options_for_select([
+                  ['Active', 'active'],
+                  ['Inactive', 'inactive'],
+                  ['Suspended', 'suspended']
+                ], provider.status), 
+                {}, 
+                { class: "w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors" } %>
+          </div>
         <% end %>
+        <!-- Description -->
+        <div class="md:col-span-2">
+          <%= form.label :description, "Description (Optional)", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= form.text_area :description, 
+              class: "w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors", 
+              rows: 3, 
+              placeholder: "Describe how you use this provider..." %>
+        </div>
+        <!-- API Key Field -->
+        <div data-provider-form-target="keyField" class="md:col-span-2 <%= 'hidden' unless provider.provider_type.present? %>">
+          <%= form.label :api_key, "API Key", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <div class="relative">
+            <%= form.password_field :api_key, 
+                class: "w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors", 
+                placeholder: "Enter your API key" %>
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+              </svg>
+            </div>
+          </div>
+          <p class="mt-1 text-xs text-gray-500">Your API key will be encrypted and stored securely</p>
+        </div>
+        <!-- API Secret Field (hidden by default, for future use) -->
+        <div data-provider-form-target="secretField" class="md:col-span-2 hidden">
+          <%= form.label :api_secret, "API Secret", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= form.password_field :api_secret, 
+              class: "w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors", 
+              placeholder: "Enter your API secret" %>
+        </div>
+      </div>
+      <!-- Form Actions -->
+      <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+        <div class="text-sm text-gray-500">
+          <% unless provider.persisted? %>
+            All fields marked with * are required
+          <% end %>
+        </div>
+        <div class="flex space-x-3">
+          <% if provider.persisted? %>
+            <%= link_to providers_path, 
+                class: "px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors" do %>
+              Cancel
+            <% end %>
+          <% end %>
+          <%= form.submit(
+                provider.persisted? ? "Update Provider" : "Add Provider", 
+                class: "px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors cursor-pointer"
+              ) %>
+        </div>
       </div>
     <% end %>
   </div>
-  <script>
-    function togglePasswordVisibility(button) {
-      const input = button.previousElementSibling;
-      if (input.type === 'password') {
-        input.type = 'text';
-        button.textContent = '🙈';
-      } else {
-        input.type = 'password';
-        button.textContent = '👁️';
-      }
-    }
-  </script>
 <% end %>
