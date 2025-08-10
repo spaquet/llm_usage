@@ -79,8 +79,8 @@ class EnhancedUsageCardComponent < ViewComponent::Base
   end
 
   # Move helper methods into component to avoid helpers. calls
-  def provider_icon_class
-    case provider.name.downcase
+  def provider_icon_class(provider_name)
+    case provider_name.downcase
     when /claude|anthropic/
       "w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center"
     when /openai|gpt/
@@ -92,8 +92,8 @@ class EnhancedUsageCardComponent < ViewComponent::Base
     end
   end
 
-  def provider_icon_color
-    case provider.name.downcase
+  def provider_icon_color(provider_name)
+    case provider_name.downcase
     when /claude|anthropic/
       "text-orange-600"
     when /openai|gpt/
