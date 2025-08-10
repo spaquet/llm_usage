@@ -24,7 +24,14 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_09_210514) do
   end
 
   create_table "providers", force: :cascade do |t|
-    t.string "name"
+    t.string "name", null: false
+    t.string "api_key", null: false
+    t.string "api_secret", null: false
+    t.string "api_url", null: false
+    t.string "api_version"
+    t.integer "status", default: 0, null: false
+    t.string "description"
+    t.string "provider_type"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end

@@ -1,7 +1,48 @@
 <%= turbo_frame_tag "provider_form" do %>
   <div class="bg-white shadow-lg rounded-xl p-6 mb-6">
     <h2 class="text-xl font-bold text-gray-900 mb-4"><%= provider.persisted? ? "Edit Provider" : "Add Provider" %></h2>
-    <%= form_with model: provider, class: "space-y-4" do |form| %>
+    <!-- API Key Documentation Section -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+      <h3 class="text-lg font-semibold text-blue-900 mb-3">📋 How to Get Your API Key</h3>
+      <div class="grid md:grid-cols-3 gap-4 text-sm">
+        <div class="bg-white rounded-lg p-3 border">
+          <h4 class="font-semibold text-gray-900 mb-2">🤖 OpenAI</h4>
+          <ol class="text-gray-600 space-y-1">
+            <li>1. Go to <a href="https://platform.openai.com" target="_blank" class="text-blue-600 hover:underline">platform.openai.com</a></li>
+            <li>2. Sign in to your account</li>
+            <li>3. Click "API Keys" in sidebar</li>
+            <li>4. Click "Create new secret key"</li>
+            <li>5. Copy the key (starts with <code class="bg-gray-100 px-1 rounded">sk-</code>)</li>
+          </ol>
+        </div>
+        <div class="bg-white rounded-lg p-3 border">
+          <h4 class="font-semibold text-gray-900 mb-2">🧠 Anthropic (Claude)</h4>
+          <ol class="text-gray-600 space-y-1">
+            <li>1. Go to <a href="https://console.anthropic.com" target="_blank" class="text-blue-600 hover:underline">console.anthropic.com</a></li>
+            <li>2. Sign in to your account</li>
+            <li>3. Navigate to "API Keys"</li>
+            <li>4. Click "Create Key"</li>
+            <li>5. Copy the key (starts with <code class="bg-gray-100 px-1 rounded">sk-ant-</code>)</li>
+          </ol>
+        </div>
+        <div class="bg-white rounded-lg p-3 border">
+          <h4 class="font-semibold text-gray-900 mb-2">🚀 xAI (Grok)</h4>
+          <ol class="text-gray-600 space-y-1">
+            <li>1. Go to <a href="https://console.x.ai" target="_blank" class="text-blue-600 hover:underline">console.x.ai</a></li>
+            <li>2. Sign in to your account</li>
+            <li>3. Navigate to "API Keys"</li>
+            <li>4. Generate new API key</li>
+            <li>5. Copy the generated key</li>
+          </ol>
+        </div>
+      </div>
+      <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <p class="text-yellow-800 text-sm">
+          🔒 <strong>Security Note:</strong> Your API keys are encrypted and stored securely. Never share your API keys publicly.
+        </p>
+      </div>
+    </div>
+    <%= form_with model: provider, class: "space-y-4", data: { controller: "provider-form" } do |form| %>
       <% if provider.errors.any? %>
         <div class="bg-red-100 text-red-700 p-4 rounded-lg">
           <ul>
@@ -12,31 +53,72 @@
         </div>
       <% end %>
       <div>
-        <%= form.label :provider_type, "Provider Type", class: "block text-gray-600 mb-1" %>
-        <%= form.select :provider_type, options_for_select(predefined_providers.keys, form.object.provider_type || params[:provider]&.dig(:provider_type)), { include_blank: "Select a provider" }, class: "w-full p-2 border rounded-lg", data: { controller: "provider-form", action: "change->provider-form#toggleKeyField" } %>
+        <%= form.label :provider_type, "Provider Type", class: "block text-gray-700 font-medium mb-2" %>
+        <%= form.select :provider_type, 
+            options_for_select(predefined_providers.keys.map { |k| [k, k] }, form.object.provider_type || params[:provider]&.dig(:provider_type)), 
+            { include_blank: "Select a provider" }, 
+            { 
+              class: "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500", 
+              data: { action: "change->provider-form#toggleKeyField" }
+            } %>
       </div>
       <div>
-        <%= form.label :name, class: "block text-gray-600 mb-1" %>
-        <%= form.text_field :name, class: "w-full p-2 border rounded-lg", placeholder: "e.g., My xAI Provider" %>
+        <%= form.label :name, "Provider Name", class: "block text-gray-700 font-medium mb-2" %>
+        <%= form.text_field :name, 
+            class: "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500", 
+            placeholder: "e.g., My OpenAI Production Account" %>
       </div>
       <div>
-        <%= form.label :description, class: "block text-gray-600 mb-1" %>
-        <%= form.text_area :description, class: "w-full p-2 border rounded-lg", rows: 4, placeholder: "Optional description" %>
+        <%= form.label :description, "Description (Optional)", class: "block text-gray-700 font-medium mb-2" %>
+        <%= form.text_area :description, 
+            class: "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500", 
+            rows: 3, 
+            placeholder: "Optional description for this provider" %>
       </div>
-      <div data-provider-form-target="keyField">
-        <%= form.label :api_key, "API Key", class: "block text-gray-600 mb-1 hidden", data: { provider_form_target: "label" } %>
-        <%= form.text_field :api_key, class: "w-full p-2 border rounded-lg hidden", placeholder: "Enter API Key", data: { provider_form_target: "input" } %>
+      <div data-provider-form-target="keyField" class="hidden">
+        <%= form.label :api_key, "API Key", class: "block text-gray-700 font-medium mb-2", data: { provider_form_target: "keyLabel" } %>
+        <div class="relative">
+          <%= form.password_field :api_key, 
+              class: "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-12", 
+              placeholder: "Paste your API key here",
+              data: { provider_form_target: "keyInput" } %>
+          <button type="button" 
+                  class="absolute inset-y-0 right-0 px-3 py-2 text-gray-500 hover:text-gray-700"
+                  onclick="togglePasswordVisibility(this)"
+                  title="Show/Hide API Key">
+            👁️
+          </button>
+        </div>
+        <p class="text-sm text-gray-500 mt-1">
+          Your API key will be encrypted and stored securely.
+        </p>
       </div>
       <div data-provider-form-target="secretField" class="hidden">
-        <%= form.label :api_secret, "API Secret", class: "block text-gray-600 mb-1", data: { provider_form_target: "label" } %>
-        <%= form.text_field :api_secret, class: "w-full p-2 border rounded-lg", placeholder: "Enter API Secret", data: { provider_form_target: "input" } %>
+        <%= form.label :api_secret, "API Secret", class: "block text-gray-700 font-medium mb-2" %>
+        <%= form.password_field :api_secret, 
+            class: "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500", 
+            placeholder: "Enter API Secret" %>
       </div>
-      <div class="flex space-x-2">
-        <%= form.submit provider.persisted? ? "Update Provider" : "Add Provider", class: "py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition cursor-pointer" %>
+      <div class="flex space-x-3 pt-4">
+        <%= form.submit provider.persisted? ? "Update Provider" : "Add Provider", 
+            class: "px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition cursor-pointer" %>
         <% if provider.persisted? %>
-          <%= link_to "Cancel", providers_path, class: "py-2 px-4 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition" %>
+          <%= link_to "Cancel", providers_path, 
+              class: "px-6 py-3 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition" %>
         <% end %>
       </div>
     <% end %>
   </div>
+  <script>
+    function togglePasswordVisibility(button) {
+      const input = button.previousElementSibling;
+      if (input.type === 'password') {
+        input.type = 'text';
+        button.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        button.textContent = '👁️';
+      }
+    }
+  </script>
 <% end %>

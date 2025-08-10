@@ -8,6 +8,6 @@ class CreatePlans < ActiveRecord::Migration[8.0]
       t.timestamps
     end
 
-    add_index :plans, :provider_id, name: "index_plans_on_provider_id"
+    # add_index :plans, :provider_id, name: "index_plans_on_provider_id"
   end
 end

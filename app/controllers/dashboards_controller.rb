@@ -8,6 +8,6 @@ class DashboardsController < ApplicationController
 
   def refresh
     SyncApiUsageJob.perform_later
-    redirect_to dashboards_path, notice: "Usage data refresh scheduled."
+    redirect_to root_path, notice: "Usage data refresh scheduled."
   end
 end

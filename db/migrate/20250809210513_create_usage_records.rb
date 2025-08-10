@@ -9,6 +9,6 @@ class CreateUsageRecords < ActiveRecord::Migration[8.0]
       t.timestamps
     end
 
-    add_index :usage_records, :provider_id, name: "index_usage_records_on_provider_id"
+    # add_index :usage_records, :provider_id, name: 'index_usage_records_on_provider_id'
   end
 end

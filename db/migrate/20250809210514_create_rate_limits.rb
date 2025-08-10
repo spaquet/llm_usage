@@ -9,6 +9,6 @@ class CreateRateLimits < ActiveRecord::Migration[8.0]
       t.timestamps
     end
 
-    add_index :rate_limits, :provider_id, name: "index_rate_limits_on_provider_id"
+    # add_index :rate_limits, :provider_id, name: "index_rate_limits_on_provider_id"
   end
 end
